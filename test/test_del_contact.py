@@ -18,19 +18,24 @@ def test_delete_some_contact(app, db, check_ui):
                                                                      key=Contact.id_or_max)
 
 
-def test_delete_some_contact_in_groups(app, orm, db):
-    if len(db.get_contact_list()) == 0:
-        app.contact.create(Contact(firstname="test"))
+def test_del_contact_from_group(app, db, check_ui):
     if len(db.get_group_list()) == 0:
-        app.group.create(Group(name="test"))
-    contacts = db.get_contact_list()
-    contact0 = random.choice(contacts)
-    groups = db.get_group_list()
-    group = random.choice(groups)
-    if contact0.id in group.name:
-        app.delete_contact_in_group(contact0.id, group.name)
-    else:
-        app.contact.add_contact_in_group(contact0.id, group.name)
-        app.contact.delete_contact_in_group(contact0.id, group.name)
-    new_contacts_in_group = orm.get_contacts_in_group(group)
-    assert contact0 not in new_contacts_in_group
+        app.group.create(Group(name="test group"))
+    if len(db.get_contact_list()) == 0:
+        app.contact.add_new(Contact("1n", "2n", "3n", "", "Title", "Comp", "address",
+                                    "", "", "+7900", "+723456789",
+                                    "test@test.com", "t@t2.com", "t@t3.com", "localhost",
+                                    "3", "May"))
+    old_contacts = db.get_contact_list()
+    old_groups = db.get_group_list()
+    contact0 = random.choice(old_contacts)
+    group0 = random.choice(old_groups)
+    old_list = db.get_contacts_in_group(group0.id)
+    if len(db.get_contacts_in_group(group0.id)) == 0:
+        app.contact.add_contact_to_group_by_id(contact0.id, group0.id)
+    old_list = db.get_contacts_in_group(group0.id)
+    contact0 = random.choice(old_list)
+    app.contact.delete_contact_from_group_by_id(contact0.id, group0.id)
+    old_list.remove(contact0)
+    new_list = db.get_contacts_in_group(group0.id)
+    assert old_list == new_list
