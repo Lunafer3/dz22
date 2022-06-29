@@ -15,19 +15,25 @@ def test_add_contact(app, db, json_contacts, check_ui):
                                                                      key=Contact.id_or_max)
 
 
-def test_add_contact_in_group(app, orm, db):
-    if len(db.get_contact_list()) == 0:
-        app.contact.create(Contact(firstname="test"))
-    if len(db.get_group_list()) == 0:
+def test_add_contacts_to_group(app):
+    if app.group.count() == 0:
         app.group.create(Group(name="test"))
-    contacts = db.get_contact_list()
-    contact0 = random.choice(contacts)
-    groups = db.get_group_list()
+    groups = app.orm.get_group_list()
     group = random.choice(groups)
-    if contact0.id not in group.name:
-        app.contact.add_contact_in_group(contact0.id, group.name)
-    else:
-        app.contact.delete_contact_in_group(contact0.id, group.name)
-        app.contact.add_contact_in_group(contact0.id, group.name)
-    contacts_in_group = orm.get_contacts_in_group(group)
-    assert contact0 in contacts_in_group
+    old_contacts = app.orm.get_contacts_in_group(group)
+    if app.contact.count() == 0:
+        new_contact = Contact(firstname="test")
+        app.contact.create(new_contact)
+    contacts = app.orm.get_contacts_not_in_group(group)
+    if len(contacts) == 0:
+        new_contact = Contact(firstname='pure')
+        app.contact.create(new_contact)
+        contacts = app.orm.get_contacts_not_in_group(group)
+    contact = random.choice(contacts)
+    app.contact.add_to_group(contact, group)
+    old_contacts.append(contact)
+    new_contacts = app.orm.get_contacts_in_group(group)
+    assert len(old_contacts) == len(new_contacts)
+    assert sorted(old_contacts, key=Contact.id_or_max) == sorted(
+        new_contacts, key=Contact.id_or_max)
+
