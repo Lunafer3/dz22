@@ -15,25 +15,26 @@ def test_add_contact(app, db, json_contacts, check_ui):
                                                                      key=Contact.id_or_max)
 
 
-def test_add_contacts_to_group(app):
-    if app.group.count() == 0:
-        app.group.create(Group(name="test"))
-    groups = app.orm.get_group_list()
-    group = random.choice(groups)
-    old_contacts = app.orm.get_contacts_in_group(group)
-    if app.contact.count() == 0:
-        new_contact = Contact(firstname="test")
-        app.contact.create(new_contact)
-    contacts = app.orm.get_contacts_not_in_group(group)
-    if len(contacts) == 0:
-        new_contact = Contact(firstname='pure')
-        app.contact.create(new_contact)
-        contacts = app.orm.get_contacts_not_in_group(group)
-    contact = random.choice(contacts)
-    app.contact.add_to_group(contact, group)
-    old_contacts.append(contact)
-    new_contacts = app.orm.get_contacts_in_group(group)
-    assert len(old_contacts) == len(new_contacts)
-    assert sorted(old_contacts, key=Contact.id_or_max) == sorted(
-        new_contacts, key=Contact.id_or_max)
-
+def test_add_contact_to_group(app, db, check_ui):
+    if len(db.get_group_list()) == 0:
+        app.group.create(Group(name="test group"))
+    if len(db.get_contact_list()) == 0:
+        app.contact.add_new(Contact("1n", "2n", "3n", "", "Title", "Comp", "address",
+                                    "", "", "+7900", "+723456789",
+                                    "test@test.com", "t@t2.com", "t@t3.com", "localhost",
+                                    "3", "May"))
+    list_groups = db.get_group_list()
+    group0 = random.choice(list_groups)
+    old_list = db.get_contacts_in_group(group0.id)
+    add_list = db.get_contacts_not_in_group(group0.id)
+    if len(add_list) == 0:
+        app.contact.add_new(Contact("1n", "2n", "3n", "", "Title", "Comp", "address",
+                                    "", "", "+7900", "+723456789",
+                                    "test@test.com", "t@t2.com", "t@t3.com", "localhost",
+                                    "3", "May"))
+        add_list = db.get_contacts_not_in_group(group0.id)
+    contact0 = random.choice(add_list)
+    app.contact.add_contact_to_group_by_id(contact0.id, group0.id)
+    new_list = db.get_contacts_in_group(group0.id)
+    old_list.append(contact0)
+    assert sorted(old_list, key=Group.id_or_max) == sorted(new_list, key=Group.id_or_max)
