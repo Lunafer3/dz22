@@ -1,19 +1,18 @@
+from model.contact import Contact
 import random
 import string
 import os.path
 import getopt
 import sys
 import jsonpickle
-from model.contact import Contact
-
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "n:f:", ["number of contacts", "file"])
+    opts, args = getopt.getopt(sys.argv[1:], "n:f:", ["number of groups", "file"])
 except getopt.GetoptError as err:
     getopt.usage()
     sys.exit(2)
 
-n = 1
+n = 3
 f = "data/contacts.json"
 
 for o, a in opts:
@@ -23,31 +22,38 @@ for o, a in opts:
         f = a
 
 
-def random_string(prefix, maxlen):
-    symbols = string.ascii_letters + string.digits
+def random_sign_string(prefix, maxlen):
+    symbols = string.ascii_letters + string.digits + string.punctuation + " "*10
     return prefix + "".join([random.choice(symbols) for i in range(random.randrange(maxlen))])
 
+def random_string(prefix, maxlen):
+    symbols = string.ascii_letters + string.digits + " "
+    return prefix + "".join([random.choice(symbols) for i in range(random.randrange(maxlen))])
 
-testdata = [Contact(firstname="test", middlename="test", lastname="test",
-                    nickname="test", title="test",
-                    company="test", address="test",
-                    home="333", mobile="777", work="999", phone2="111",
-                    email="test", email2="test", email3="test")] + [
-               Contact(firstname=random_string("firstname", 15), middlename=random_string("middlename", 20),
-                       lastname=random_string("lastname", 15),
-                       nickname=random_string("nick", 25), title=random_string("title", 15),
-                       company=random_string("company", 15), address=random_string("address", 20),
-                       home=random_string("phone", 15), mobile=random_string("mobile", 15),
-                       work=random_string("work", 15), phone2=random_string("phone2", 15),
-                       email=random_string("email", 20), email2=random_string("email2", 25),
-                       email3=random_string("email3", 15))
-               for i in range(n)
+def random_email(prefix, maxlen1, maxlen2):
+    symbols = string.ascii_letters + string.digits
+    return prefix + "".join([random.choice(symbols) for i in range(random.randrange(maxlen1))]) \
+            +"@" + "".join([random.choice(symbols) for i in range(random.randrange(maxlen1))]) \
+            +"." + "".join([random.choice(symbols) for i in range(2)])
 
-           ]
+def random_number(prefix, maxlen):
+        symbols = string.digits
+        return prefix + "".join([random.choice(symbols) for i in range(random.randrange(maxlen))])
+
+
+testdata = [ Contact(firstname="")] + \
+        [
+       Contact(firstname=random_string("", 8), middlename=random_string("", 10), lastname=random_string("", 15),
+            nickname=random_string("", 8),
+            title=random_string("", 10), company=random_string("", 15), address=random_string("", 20),
+            home=random_number("+7",10), mobile=random_number("+",11), work=random_number("+7",10),
+            fax=random_number("+7",10),
+            email=random_email("", 7,5), email2=random_email("", 7,5), email3=random_email("", 7,5),
+            homepage=random_string("", 15),
+            saddress=random_string("", 20), phone2=random_number("+",11), snotes=random_string("", 30))
+    for i in range(n)]
 
 file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", f)
 
-
-with open(file, "w") as out:
-    jsonpickle.set_encoder_options("json", indent=2)
-    out.write(jsonpickle.encode(testdata))
+with open(file, "w") as fout:
+    fout.write(jsonpickle.encode(testdata, indent=2))

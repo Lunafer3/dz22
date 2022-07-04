@@ -1,10 +1,16 @@
 from sys import maxsize
 
-
 class Contact:
-    def __init__(self, firstname=None, middlename=None, lastname=None, nickname=None, title=None, company=None,
-                 address=None, home=None, mobile=None, work=None, phone2=None, email=None, email2=None, email3=None,
-                 all_phones_from_home_page=None, all_emails_from_home_page=None, id=None):
+    def __init__(self, firstname=None, middlename=None, lastname=None, nickname=None,
+                 title=None, company=None, address=None,
+                 home=None, mobile=None, work=None, fax=None,
+                 email=None, email2=None, email3=None,
+                 homepage=None,
+                 dbirthday=None, mbirthday=None, ybirthday=None,
+                 danniversary=None, manniversary=None, yanniversary=None,
+                 saddress=None, phone2=None, snotes=None,
+                 id=None, all_phones_from_home_page=None, all_emails_from_home_page=None,
+                 ):
         self.firstname = firstname
         self.middlename = middlename
         self.lastname = lastname
@@ -15,19 +21,33 @@ class Contact:
         self.home = home
         self.mobile = mobile
         self.work = work
-        self.phone2 = phone2
+        self.fax = fax
         self.email = email
         self.email2 = email2
         self.email3 = email3
+        self.homepage = homepage
+        self.dbirthday = dbirthday
+        self.mbirthday = mbirthday
+        self.ybirthday = ybirthday
+        self.danniversary = danniversary
+        self.manniversary = manniversary
+        self.yanniversary = yanniversary
+        self.saddress = saddress
+        self.phone2 = phone2
+        self.snotes = snotes
+        self.id = id
         self.all_phones_from_home_page = all_phones_from_home_page
         self.all_emails_from_home_page = all_emails_from_home_page
-        self.id = id
 
     def __repr__(self):
-        return "%s:%s:%s" % (self.id, self.firstname, self.lastname)
+        return "%s:%s:%s:%s" % (self.id, self.lastname, self.firstname, self.address)
 
     def __eq__(self, other):
-        return self.id is None or other.id is None or self.id == other.id
+        return (self.id is None or other.id is None or self.id == other.id) and \
+        (self.lastname == other.lastname or self.lastname is None  or
+         other.lastname is None) and \
+        (self.firstname == other.firstname or self.firstname is None or
+        other.firstname is None)
 
     def id_or_max(self):
         if self.id:

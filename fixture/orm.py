@@ -1,64 +1,48 @@
-from pony.orm import *
-from model.group import Group
-from model.contact import Contact
+class SessionHelper:
+    def __init__(self, app):
+        self.app = app
+
+    def login(self, username, password):
+        wd = self.app.wd
+        self.app.open_initial_page()
+        wd.find_element_by_xpath("//*/text()[normalize-space(.)='']/parent::*").click()
+        wd.find_element_by_name("user").click()
+        wd.find_element_by_name("user").clear()
+        wd.find_element_by_name("user").send_keys(username)
+        wd.find_element_by_id("LoginForm").click()
+        wd.find_element_by_name("pass").click()
+        wd.find_element_by_name("pass").clear()
+        wd.find_element_by_name("pass").send_keys(password)
+        wd.find_element_by_xpath("//input[@value='Login']").click()
+
+    def ensure_login(self, username, password):
+        wd = self.app.wd
+        if self.is_logged_in():
+            if self.is_logged_in_as(username):
+                return
+            else:
+                self.logout()
+        self.login(username, password)
+
+    def logout(self):
+        wd = self.app.wd
+        wd.find_element_by_link_text("Logout").click()
+        wd.find_element_by_name("user")
+
+    def ensure_logout(self):
+        wd = self.app.wd
+        if self.is_logged_in():
+            self.logout()
+
+    def is_logged_in(self):
+        wd = self.app.wd
+        return len(wd.find_elements_by_link_text("Logout")) > 0
 
 
-class ORMFixture:
-    db = Database()
+    def is_logged_in_as(self, username):
+        wd = self.app.wd
+        return self.get_logged_user() == username
 
-    class ORMGroup(db.Entity):
-        _table_ = 'group_list'
-        id = PrimaryKey(int, column='group_id')
-        name = Optional(str, column='group_name')
-        header = Optional(str, column='group_header')
-        footer = Optional(str, column='group_footer')
-        contacts = Set(lambda: ORMFixture.ORMContact, table='address_in_groups', column='id', reverse='groups',
-                       lazy=True)
-
-    class ORMContact(db.Entity):
-        _table_ = 'addressbook'
-        id = PrimaryKey(int, column='id')
-        firstname = Optional(str, column='firstname')
-        lastname = Optional(str, column='lastname')
-        address = Optional(str, column='address')
-        deprecated = Optional(str, column='deprecated')
-        groups = Set(lambda: ORMFixture.ORMGroup, table='address_in_groups', column='group_id', reverse='contacts',
-                     lazy=True)
-
-    def __init__(self, host, name, user, password):
-        self.db.bind('mysql', host=host, database=name, user=user, password=password)
-        self.db.generate_mapping()
-        sql_debug(True)
-
-    def convert_groups_to_model(self, groups):
-        def convert(group):
-            return Group(id=str(group.id), name=group.name, header=group.header, footer=group.footer)
-
-        return list(map(convert, groups))
-
-    @db_session
-    def get_group_list(self):
-        return self.convert_groups_to_model(select(g for g in ORMFixture.ORMGroup))
-
-    def convert_contacts_to_model(self, contacts):
-        def convert(contact):
-            return Contact(id=str(contact.id), firstname=contact.firstname, lastname=contact.lastname,
-                           address=contact.address)
-
-        return list(map(convert, contacts))
-
-    @db_session
-    def get_contact_list(self):
-        return self.convert_contacts_to_model(select(c for c in ORMFixture.ORMContact if c.deprecated is None))
-
-    @db_session
-    def get_contacts_in_group(self, group):
-        orm_group = list(select(g for g in ORMFixture.ORMGroup if g.id == group.id))[0]
-        return self.convert_contacts_to_model(orm_group.contacts)
-
-    @db_session
-    def get_contacts_not_in_group(self, group):
-        orm_group = list(select(g for g in ORMFixture.ORMGroup if g.id == group.id))[0]
-        return self.convert_contacts_to_model(
-            select(c for c in ORMFixture.ORMContact if c.deprecated is None and orm_group not in c.groups))
-
+    def get_logged_user(self):
+        wd = self.app.wd
+        return wd.find_element_by_xpath("//body/div/div[1]/form/b").text[1:-1]
